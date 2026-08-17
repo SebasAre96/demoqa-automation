@@ -48,7 +48,7 @@ pipeline {
         stage('🔨 Build') {
             steps {
                 echo "🔨 Compilando proyecto DemoQA..."
-                sh 'mvn clean compile -q'
+                sh "${tool 'Maven'}/bin/mvn clean compile -q"
                 echo "✅ Compilación exitosa"
             }
         }
@@ -56,14 +56,13 @@ pipeline {
         stage('🧪 Tests') {
             steps {
                 script {
+                    def mvn = "${tool 'Maven'}/bin/mvn"
                     def tags = ''
                     if (params.SUITE == 'smoke')      tags = '-Dcucumber.filter.tags="@smoke"'
                     if (params.SUITE == 'regression') tags = '-Dcucumber.filter.tags="@regression"'
 
-                    echo "🧪 Suite: ${params.SUITE} | Browser: ${params.BROWSER} | Headless: ${params.HEADLESS}"
-
                     sh """
-                        mvn test \
+                        ${mvn} test \
                             -Dbrowser=${params.BROWSER} \
                             -Dheadless=${params.HEADLESS} \
                             ${tags} \
