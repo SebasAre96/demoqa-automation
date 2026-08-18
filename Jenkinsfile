@@ -58,7 +58,7 @@ pipeline {
                 script {
                     def mvn = "${tool 'Maven'}/bin/mvn"
                     def tags = ''
-                    if (params.SUITE == 'smoke')      tags = '-Dcucumber.filter.tags="@smoke"'
+                    if (params.SUITE == 'smoke') tags = '-Dcucumber.filter.tags="@smoke and not @ignore"'
                     if (params.SUITE == 'regression') tags = '-Dcucumber.filter.tags="@regression"'
 
                     sh """

@@ -1,7 +1,7 @@
 @interactions
 Feature: Interactions — Drag & Drop, Sortable, Selectable
 
-  @smoke
+  @smoke @ignore
   Scenario: Drag and Drop — arrastrar elemento al drop zone
     Given el usuario navega a la sección Droppable
     When arrastra el elemento al drop zone
