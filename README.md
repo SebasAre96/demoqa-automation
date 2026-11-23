@@ -6,33 +6,34 @@
 ![Cucumber](https://img.shields.io/badge/Cucumber-7.15-23D96C)
 ![TestNG](https://img.shields.io/badge/TestNG-7.9-red)
 
-Framework de automatización de pruebas UI para [demoqa.com](https://demoqa.com), construido con **Java + Selenium + Cucumber (BDD)**, con integración continua en **GitHub Actions** y **Jenkins** y reportes **Allure**.
+Framework de automatización de pruebas UI para [demoqa.com](https://demoqa.com), construido con **Java + Selenium +
+Cucumber (BDD)**, con integración continua en **GitHub Actions** y **Jenkins** y reportes **Allure**.
 
 📊 **[Ver último reporte Allure](https://sebasare96.github.io/demoqa-automation/)**
 
 ## Stack
 
-| Área | Tecnología |
-|---|---|
-| Lenguaje | Java 17 |
+| Área              | Tecnología                                 |
+|-------------------|--------------------------------------------|
+| Lenguaje          | Java 17                                    |
 | Automatización UI | Selenium WebDriver 4.18 + WebDriverManager |
-| BDD | Cucumber 7.15 (Gherkin) |
-| Runner | TestNG 7.9 |
-| Aserciones | AssertJ |
-| Reportes | Allure 2.25 + reporte HTML de Cucumber |
-| Build | Maven |
-| CI/CD | GitHub Actions y Jenkins |
+| BDD               | Cucumber 7.15 (Gherkin)                    |
+| Runner            | TestNG 7.9                                 |
+| Aserciones        | AssertJ                                    |
+| Reportes          | Allure 2.25 + reporte HTML de Cucumber     |
+| Build             | Maven                                      |
+| CI/CD             | GitHub Actions y Jenkins                   |
 
 ## Cobertura
 
 23 escenarios agrupados en 4 features:
 
-| Feature | Qué cubre |
-|---|---|
-| `01_elements` | Text Box, checkbox, radio buttons, Web Tables, double click y right click |
-| `02_forms` | Practice Form completo, validaciones de campos requeridos |
-| `03_alerts_windows` | Alerts (simple, confirm, prompt), nuevas ventanas, iframes y modals |
-| `04_interactions` | Drag & Drop, Sortable y Selectable |
+| Feature             | Qué cubre                                                                 |
+|---------------------|---------------------------------------------------------------------------|
+| `01_elements`       | Text Box, checkbox, radio buttons, Web Tables, double click y right click |
+| `02_forms`          | Practice Form completo, validaciones de campos requeridos                 |
+| `03_alerts_windows` | Alerts (simple, confirm, prompt), nuevas ventanas, iframes y modals       |
+| `04_interactions`   | Drag & Drop, Sortable y Selectable                                        |
 
 ## Estructura del proyecto
 
@@ -60,7 +61,8 @@ Framework de automatización de pruebas UI para [demoqa.com](https://demoqa.com)
 
 - **Page Object Model** para separar la lógica de las páginas de los steps.
 - **`DriverManager` con `ThreadLocal`**, lo que deja el framework listo para ejecución en paralelo.
-- **Configuración con prioridad:** propiedad de sistema (`-Dbrowser=...`) → variable de entorno → `config.properties`. El mismo código corre en local y en CI sin cambios.
+- **Configuración con prioridad:** propiedad de sistema (`-Dbrowser=...`) → variable de entorno → `config.properties`.
+  El mismo código corre en local y en CI sin cambios.
 - **Screenshots automáticos** adjuntos al reporte cuando falla un escenario.
 - **Tags Cucumber** para elegir suites (`@smoke`, `@ignore` para escenarios inestables en headless).
 
@@ -79,12 +81,12 @@ mvn clean test -Dbrowser=chrome -Dheadless=true -Dcucumber.filter.tags="@smoke a
 mvn clean test -Dbrowser=firefox -Dheadless=true
 ```
 
-| Parámetro | Valores | Por defecto |
-|---|---|---|
-| `browser` | `chrome`, `firefox` | `chrome` |
-| `headless` | `true`, `false` | `false` |
-| `base.url` | URL del sitio | `https://demoqa.com` |
-| `timeout` | segundos | `10` |
+| Parámetro  | Valores             | Por defecto          |
+|------------|---------------------|----------------------|
+| `browser`  | `chrome`, `firefox` | `chrome`             |
+| `headless` | `true`, `false`     | `false`              |
+| `base.url` | URL del sitio       | `https://demoqa.com` |
+| `timeout`  | segundos            | `10`                 |
 
 ### Ver el reporte Allure en local
 
@@ -107,7 +109,8 @@ flowchart LR
 
 ### GitHub Actions (`.github/workflows/ci.yml`)
 
-- **Se dispara** en push y pull request a `main`, todos los días hábiles a las 06:00 UTC (cron) y manualmente (`workflow_dispatch`, eligiendo browser y suite).
+- **Se dispara** en push y pull request a `main`, todos los días hábiles a las 06:00 UTC (cron) y manualmente
+  (`workflow_dispatch`, eligiendo browser y suite).
 - Corre en Ubuntu con JDK 17 y caché de Maven, en modo headless.
 - Por defecto ejecuta la suite **smoke**; la corrida manual permite elegir **regression**.
 - Sube los reportes como artefactos y **publica el reporte Allure en GitHub Pages**.
@@ -118,34 +121,42 @@ flowchart LR
 
 Pipeline declarativo con parámetros `BROWSER`, `HEADLESS` y `SUITE`.
 
-| Stage | Descripción |
-|---|---|
-| Checkout | Limpia el workspace y muestra el commit |
-| Build | `mvn clean compile` |
-| Tests | `mvn test` con browser y tags según parámetros |
-| Post | Publica resultados JUnit, reporte Allure y archiva el HTML de Cucumber (aunque fallen los tests) |
+| Stage    | Descripción                                                                                      |
+|----------|--------------------------------------------------------------------------------------------------|
+| Checkout | Limpia el workspace y muestra el commit                                                          |
+| Build    | `mvn clean compile`                                                                              |
+| Tests    | `mvn test` con browser y tags según parámetros                                                   |
+| Post     | Publica resultados JUnit, reporte Allure y archiva el HTML de Cucumber (aunque fallen los tests) |
 
 **Requisitos en Jenkins:**
 
 - Plugins: Pipeline, JUnit, Allure, GitHub.
 - Una herramienta Maven llamada `Maven` en *Manage Jenkins → Tools*.
 - JDK 17 y Chrome/Firefox disponibles en el agente.
-- Para el trigger `githubPush()`, Jenkins debe ser accesible desde internet (webhook de GitHub); en una instalación local se puede lanzar el build manualmente o usar un túnel.
+- Para el trigger `githubPush()`, Jenkins debe ser accesible desde internet (webhook de GitHub); en una instalación
+  local se puede lanzar el build manualmente o usar un túnel.
 
-<!--
-Agregar capturas (guardarlas en docs/img/ y descomentar):
+### Capturas
+
+**GitHub Actions**
+
+![GitHub Actions](docs/img/github-actions.png)
+
+**Jenkins**
 
 ![Pipeline en Jenkins](docs/img/jenkins-pipeline.png)
+
+**Reporte Allure**
+
 ![Reporte Allure](docs/img/allure-report.png)
-![GitHub Actions](docs/img/github-actions.png)
 -->
 
 ## Suites disponibles
 
-| Suite | Filtro de tags | Uso |
-|---|---|---|
-| `smoke` | `@smoke and not @ignore` | Validación rápida en cada push |
-| `regression` | `not @ignore` | Corrida completa |
+| Suite        | Filtro de tags           | Uso                            |
+|--------------|--------------------------|--------------------------------|
+| `smoke`      | `@smoke and not @ignore` | Validación rápida en cada push |
+| `regression` | `not @ignore`            | Corrida completa               |
 
 ## Roadmap
 
