@@ -144,7 +144,7 @@ Pipeline declarativo con parámetros `BROWSER`, `HEADLESS` y `SUITE`.
 
 **Jenkins**
 
-![Pipeline en Jenkins](docs/img/jenkins-pipeline.png)
+![Build en Jenkins](docs/img/jenkins-build.png)
 
 **Reporte Allure**
 
