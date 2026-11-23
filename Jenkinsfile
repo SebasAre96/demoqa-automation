@@ -2,6 +2,18 @@ pipeline {
 
     agent any
 
+    // Requiere en Jenkins: tool Maven llamado "Maven", JDK 17 en el agente
+    // y los plugins Pipeline, JUnit, Allure y GitHub.
+    tools {
+        maven 'Maven'
+    }
+
+    options {
+        timeout(time: 30, unit: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        disableConcurrentBuilds()
+    }
+
     parameters {
         choice(
             name: 'BROWSER',
@@ -15,8 +27,8 @@ pipeline {
         )
         choice(
             name: 'SUITE',
-            choices: ['smoke', 'regression', 'all'],
-            description: 'Suite de Cucumber a ejecutar'
+            choices: ['smoke', 'regression'],
+            description: 'smoke = escenarios @smoke | regression = todos los escenarios (excepto @ignore)'
         )
     }
 
@@ -26,12 +38,14 @@ pipeline {
     }
 
     triggers {
+        // Solo dispara si Jenkins es accesible desde internet (webhook de GitHub).
+        // En Jenkins local se puede usar un tunel (ngrok/smee) o lanzar el build a mano.
         githubPush()
     }
 
     stages {
 
-        stage('📥 Checkout') {
+        stage('Checkout') {
             steps {
                 cleanWs()
                 checkout scm
@@ -40,69 +54,60 @@ pipeline {
                         script: 'git log -1 --pretty=format:"%h - %an: %s"',
                         returnStdout: true
                     ).trim()
-                    echo "📌 Commit: ${commit}"
+                    echo "Commit: ${commit}"
                 }
             }
         }
 
-        stage('🔨 Build') {
+        stage('Build') {
             steps {
-                echo "🔨 Compilando proyecto DemoQA..."
-                sh "${tool 'Maven'}/bin/mvn clean compile -q"
-                echo "✅ Compilación exitosa"
+                sh 'mvn -B clean compile'
             }
         }
 
-        stage('🧪 Tests') {
+        stage('Tests') {
             steps {
                 script {
-                    def mvn = "${tool 'Maven'}/bin/mvn"
-                    def tags = ''
-                    if (params.SUITE == 'smoke') tags = '-Dcucumber.filter.tags="@smoke and not @ignore"'
-                    if (params.SUITE == 'regression') tags = '-Dcucumber.filter.tags="@regression"'
+                    // @ignore se excluye siempre (escenarios inestables en headless)
+                    def tagExpr = (params.SUITE == 'smoke')
+                        ? '@smoke and not @ignore'
+                        : 'not @ignore'
 
                     sh """
-                        ${mvn} test \
-                            -Dbrowser=${params.BROWSER} \
-                            -Dheadless=${params.HEADLESS} \
-                            ${tags} \
-                            -q
+                        mvn -B test \\
+                            -Dbrowser=${params.BROWSER} \\
+                            -Dheadless=${params.HEADLESS} \\
+                            -Dcucumber.filter.tags='${tagExpr}'
                     """
                 }
-            }
-            post {
-                always {
-                    junit(
-                        testResults: 'target/surefire-reports/*.xml',
-                        allowEmptyResults: true
-                    )
-                }
-            }
-        }
-
-        stage('📊 Allure Report') {
-            steps {
-                echo "📊 Generando reporte Allure..."
-                allure([
-                    includeProperties: false,
-                    jdk              : '',
-                    results          : [[path: "${ALLURE_RESULTS}"]],
-                    reportBuildPolicy: 'ALWAYS',
-                    report           : 'allure-report'
-                ])
             }
         }
     }
 
     post {
+        always {
+            // Se ejecuta aunque fallen los tests: es cuando mas se necesita el reporte
+            junit(
+                testResults: 'target/surefire-reports/*.xml',
+                allowEmptyResults: true
+            )
+            allure([
+                includeProperties: false,
+                jdk              : '',
+                results          : [[path: "${ALLURE_RESULTS}"]],
+                reportBuildPolicy: 'ALWAYS',
+                report           : 'allure-report'
+            ])
+            archiveArtifacts(
+                artifacts: 'target/cucumber-reports.html',
+                allowEmptyArchive: true
+            )
+        }
         success {
-            echo "✅ PIPELINE EXITOSO — Suite: ${params.SUITE} | Browser: ${params.BROWSER} | Build #${BUILD_NUMBER}"
+            echo "PIPELINE EXITOSO - Suite: ${params.SUITE} | Browser: ${params.BROWSER} | Build #${BUILD_NUMBER}"
         }
         failure {
-            echo "❌ PIPELINE FALLÓ — Revisar reporte Allure. Build #${BUILD_NUMBER}"
-        }
-        always {
-            echo "🧹 Pipeline finalizado."
+            echo "PIPELINE FALLO - Revisar reporte Allure. Build #${BUILD_NUMBER}"
         }
     }
 }
